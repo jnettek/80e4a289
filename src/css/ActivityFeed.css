@@ -1,0 +1,19 @@
+.activity-feed {
+    padding: 20px;
+  }
+  
+  .card-container {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .card {
+    width: 300px;
+    margin: 10px;
+    background-color: aquamarine;
+  }
+  
+  .card-content {
+    padding: 16px;
+  }
+  

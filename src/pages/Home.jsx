@@ -4,7 +4,7 @@ import ActivityFeed from '../components/ActivityFeed.jsx';
 const Home = () => {
   return (
     <div>
-      {/* <ActivityFeed showArchived={false} /> */}
+      {/* Display all activities with options to archive or unarchive. */}
       <ActivityFeed />
     </div>
   );

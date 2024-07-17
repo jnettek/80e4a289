@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { getActivities, updateActivity } from '../services/api'; 
-import { Card, CardContent, Typography, Collapse } from '@mui/material'; 
+import { Card, CardContent, Typography, Collapse, Button } from '@mui/material'; 
 import CallMadeIcon from '@mui/icons-material/CallMade';
 import CallReceivedIcon from '@mui/icons-material/CallReceived';
 import PhoneIcon from '@mui/icons-material/Phone';
 import PhoneMissedIcon from '@mui/icons-material/PhoneMissed';
 import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 
 
-// {showArchived} prop passed here call in home and archive page
-const ActivityFeed = () => {
+// {showArchived} prop passed here call in home and archive page DOESNT WORK
+const ActivityFeed = ({filterArchived}) => {
   const [activities, setActivities] = useState([]);
   // set state to track the expanded card
   const [expanded, setExpanded] = useState(null);
@@ -32,17 +34,23 @@ const ActivityFeed = () => {
     setExpanded(prevstate => prevstate === activityId ? null : activityId);
   }
 
-  ///////////////////////////////////////////////
+  /////////////////////////////////////////////// ARCHIVE LOGIC ///////////////////////////////////////////////
 
-  // Function to handle archive button click
-  // const handleArchive = (id, isArchived) => {
-  //   updateActivity(id, isArchived).then(() => {
-  //     setActivities(prevActivities => prevActivities.map(activity => 
-  //       activity.id === id ? { ...activity, is_archived: isArchived } : activity
-  //     ));
-  //   }).catch(error => console.error('Error updating activity:', error));
-  // };
-  ///////////////////////////////////////////////
+  //Function to handle archive button click
+  const handleArchive = (id, isArchived, event) => {
+    event.stopPropagation(); // Prevent card expansion when clicking the archive button / bubble up
+    updateActivity(id, isArchived).then(() => {
+      setActivities(prevActivities => prevActivities.map(activity => 
+        activity.id === id ? { ...activity, is_archived: isArchived } : activity
+      ));
+    }).catch(error => console.error('Error updating activity:', error));
+  };
+
+   // Filter activities if filterArchived is defined
+   const filteredActivities = filterArchived !== undefined
+   ? activities.filter(activity => activity.is_archived === filterArchived)
+   : activities;
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // function display icon on call directions
   const renderDirectionIcon = (direction) => {
@@ -102,11 +110,11 @@ const ActivityFeed = () => {
     <div>
       {/* archive folder icon top right */}
       {/* <h1>Call Logs</h1> */}
-      {activities.length === 0 ? (
+      {filteredActivities.length === 0 ? (
         <p>No activities to display.</p>
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-        {activities.map(activity => (
+        {filteredActivities.map(activity => (
           <Card 
           key={activity.id} 
           style={{ width: 350, margin: 5 }}
@@ -117,10 +125,12 @@ const ActivityFeed = () => {
                 {renderDirectionIcon(activity.direction)}
                 <Typography style={{ marginLeft: 8 }}>{renderCallDirection(activity)}</Typography>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
               <Typography>{formatTime(activity.created_at)}</Typography>
-              {/* <Button onClick={() => handleArchive(activity.id, !activity.is_archived)}>
-                  {activity.is_archived ? 'Unarchive' : 'Archive'}
-                </Button> */}
+              <Button sx={{ minWidth: 0 }} onClick={(event) => handleArchive(activity.id, !activity.is_archived, event)}>
+                  {activity.is_archived ? <BookmarkIcon/> : <BookmarkBorderIcon/>}
+                </Button>
+              </div>
             </CardContent>
             {/* Collapse Card */}
             <Collapse in={expanded === activity.id}>

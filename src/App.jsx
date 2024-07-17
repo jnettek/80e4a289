@@ -6,6 +6,7 @@ import Home from './pages/Home.jsx';
 import Archive from './pages/Archive.jsx';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -15,7 +16,7 @@ const App = () => {
           <div className="container-view">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/archive" element={<Archive />} />
+              <Route path="/archive" element={<Archive/>} />
             </Routes>
           </div>
           <BottomNav />

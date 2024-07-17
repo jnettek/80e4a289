@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { getActivities } from '../services/api'; // Adjust the path as needed
-import { Card, CardContent, Typography } from '@mui/material'; // Assuming you're using Material-UI
+import { getActivities, updateActivity } from '../services/api'; 
+import { Card, CardContent, Typography, Collapse } from '@mui/material'; 
 import CallMadeIcon from '@mui/icons-material/CallMade';
 import CallReceivedIcon from '@mui/icons-material/CallReceived';
 import PhoneIcon from '@mui/icons-material/Phone';
 import PhoneMissedIcon from '@mui/icons-material/PhoneMissed';
-import { Padding } from '@mui/icons-material';
+import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 
 
+// {showArchived} prop passed here call in home and archive page
 const ActivityFeed = () => {
   const [activities, setActivities] = useState([]);
+  // set state to track the expanded card
+  const [expanded, setExpanded] = useState(null);
 
   useEffect(() => {
     getActivities()
       .then(response => {
-        console.log('API Response:', response.data); // Log the API response
+        console.log('API Response:', response.data); // check the response data
         setActivities(response.data);
          // Sort activities by most recent (descending order)
          const sortedActivities = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -22,6 +26,23 @@ const ActivityFeed = () => {
       })
       .catch(error => console.error('Error fetching data:', error));
   }, []);
+
+  // Function to handle card expansion
+  const handleCardClick = (activityId) => {
+    setExpanded(prevstate => prevstate === activityId ? null : activityId);
+  }
+
+  ///////////////////////////////////////////////
+
+  // Function to handle archive button click
+  // const handleArchive = (id, isArchived) => {
+  //   updateActivity(id, isArchived).then(() => {
+  //     setActivities(prevActivities => prevActivities.map(activity => 
+  //       activity.id === id ? { ...activity, is_archived: isArchived } : activity
+  //     ));
+  //   }).catch(error => console.error('Error updating activity:', error));
+  // };
+  ///////////////////////////////////////////////
 
   // function display icon on call directions
   const renderDirectionIcon = (direction) => {
@@ -53,6 +74,18 @@ const ActivityFeed = () => {
     return time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  //function to format date from created_at
+  const formatDate = (createdAt) => {
+    const date = new Date(createdAt);
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  //function render duration of call min and sec
+  const renderDuration = (duration) => {
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    return `${minutes}m ${seconds}s`;
+  }
 
   // function if call out display activity.to else display activity.from
   const renderCallDirection = (activity) => {
@@ -63,24 +96,54 @@ const ActivityFeed = () => {
     }
   }
 
+
+
   return (
     <div>
-      <h1>Call Logs</h1>
+      {/* archive folder icon top right */}
+      {/* <h1>Call Logs</h1> */}
       {activities.length === 0 ? (
         <p>No activities to display.</p>
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-          {activities.map(activity => (
-            <Card key={activity.id} style={{ width: 350, margin: 5 }}>
-              <CardContent style={{ display: 'flex', alignItems: 'center' }}>
-                <Typography>{renderCallType(activity.call_type)}</Typography>
-                <Typography>{renderDirectionIcon(activity.direction)}</Typography>
-                <Typography>{renderCallDirection(activity)}</Typography>
-                <Typography>{formatTime(activity.created_at)} </Typography>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {activities.map(activity => (
+          <Card 
+          key={activity.id} 
+          style={{ width: 350, margin: 5 }}
+          onClick={() => handleCardClick(activity.id)}>
+            <CardContent style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                {renderCallType(activity.call_type)}
+                {renderDirectionIcon(activity.direction)}
+                <Typography style={{ marginLeft: 8 }}>{renderCallDirection(activity)}</Typography>
+              </div>
+              <Typography>{formatTime(activity.created_at)}</Typography>
+              {/* <Button onClick={() => handleArchive(activity.id, !activity.is_archived)}>
+                  {activity.is_archived ? 'Unarchive' : 'Archive'}
+                </Button> */}
+            </CardContent>
+            {/* Collapse Card */}
+            <Collapse in={expanded === activity.id}>
+                <CardContent>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Typography>From: {activity.from}</Typography>
+                  <Typography>To: {activity.to}</Typography>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center'}}>
+                    <CalendarMonthIcon style={{ marginRight: 8 }} />
+                    <Typography>{formatDate(activity.created_at)}</Typography>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', }}>
+                    <AccessTimeFilledIcon style={{ marginRight: 8 }} />
+                    <Typography>{renderDuration(activity.duration)}</Typography>
+                  </div>
+                  </div>
+                </CardContent>
+              </Collapse>
+          </Card>
+        ))}
+      </div>
       )}
     </div>
   );
